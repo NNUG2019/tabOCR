@@ -4,7 +4,21 @@ from save_csv import save_csv
 
 
 def full_generator(number, path, height_range=(20, 20), length_range=(20, 20), cell_range=(5, 5)):
-    cell_length = 5
+    """
+
+    full_generator is a sort of interface for other functions.
+
+    :param number: Integer. Number of data sets to be generated.
+    :param path: Path for to the directory where files should be saved.
+    :param height_range: Iterable of dimensions [2] containing two integers representing allowed range for row number
+    interpreted as in full_imager.
+    :param length_range: Iterable of dimensions [2] containing two integers representing allowed range for column number
+    interpreted as in full_imager.
+    :param cell_range: Iterable of dimensions [2] containing two integers representing allowed range for sting lengths
+    in cells.
+    :return:
+    """
+
     heights = list(range(height_range[0], height_range[1]+1))
     lengths = list(range(length_range[0], length_range[1]+1))
     cells = list(range(cell_range[0], cell_range[1]+1))

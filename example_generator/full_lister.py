@@ -3,6 +3,16 @@ from random import choice
 
 
 def full_lister(number, cells, heights, lengths):
-    dim_tab = [[choice(heights), choice(lengths)] for i in range(number)]
+    """
+
+    full_lister generates random data sets for files to be used in other functions.
+
+    :param number: Integer. Number of file data sets to be generated.
+    :param cells: Iterable containing allowed values for character strings in cells.
+    :param heights: Iterable containing allowed values for row number interpreted as in full_imager.
+    :param lengths: Iterable containing allowed values for column number interpreted as in full_imager.
+    :return: Three dimensional list of strings containing data for files in format lst[file][column][row].
+    """
+    dim_tab = [[choice(lengths), choice(heights)] for i in range(number)]
     return [[[word_generator(length=choice(cells)) for j in range(d[1])]
             for i in range(d[0])] for d in dim_tab]

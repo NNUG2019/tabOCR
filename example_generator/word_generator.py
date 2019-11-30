@@ -2,6 +2,13 @@ from random import choice
 
 
 def word_generator(length):
+    """
+
+    word_generator is a simple function generating random strings of specified length.
+
+    :param length: Integer. A length of string to be generated.
+    :return: Result string.
+    """
     word = ''
     i = 0
     while i < length:
