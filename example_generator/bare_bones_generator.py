@@ -10,4 +10,3 @@ def bare_bones_generator(number, path):
     lst = bare_bones_lister(cell_length, number, height, length)
     save_csv(lst, path)
     bare_bones_imager(lst, path)
-

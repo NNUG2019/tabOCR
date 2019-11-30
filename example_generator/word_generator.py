@@ -1,5 +1,6 @@
 from random import choice
 
+
 def word_generator(length):
     word = ''
     i = 0
