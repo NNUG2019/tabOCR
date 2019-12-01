@@ -4,7 +4,7 @@ from openpyxl import Workbook
 from random import choice, choices, randint, random
 
 COLUMNS_NUMBER = np.arange(2,11,1)
-ROWS_NUMBER = np.arange(2,37,1)
+ROWS_NUMBER = np.arange(2,39,1)
 COLUMNS_TYPE = ["string", "number", "mixed"]
 FONT_SIZE = np.arange(9,19,1)
 PIXEL = 7
@@ -21,14 +21,14 @@ NUMBER_TYPE = [int, float]
 COLUMN_TYPE = ["string", "number"]
 IS_CONTENT_FIXED = [True, False]
 MIN_COLUMN_WIDTH = 7
-MAX_COLUMN_WIDTH = 29
+MAX_COLUMN_WIDTH = 31
 MIN_ROW_HEIGHT = 4
 MAX_ROW_HEIGHT = 8
 MIN_WORD_LENGTH = 3
-MAX_WORD_LENGTH = 10
+MAX_WORD_LENGTH = 8
 FONT_SIZE_WIDTH = 1
 ONE_LETTER_WIDTH = 3
-IMG_SHAPE = (2030, 2030)
+IMG_SHAPE = (2200, 2200)
 
 
 def generate_table_params():
@@ -104,6 +104,7 @@ def generate_column_params(column_type):
 def generate_column_width(font_size, word_max_length):
     min_column_width = MIN_COLUMN_WIDTH + FONT_SIZE_WIDTH*(font_size-FONT_SIZE[0]) + ONE_LETTER_WIDTH*(word_max_length-MIN_WORD_LENGTH)
     max_column_width = MAX_COLUMN_WIDTH
+    print(min_column_width, max_column_width)
     column_width = np.arange(min_column_width, max_column_width+1, 1)
     return {"column_width": choice(column_width)}
 
