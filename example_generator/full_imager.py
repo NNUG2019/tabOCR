@@ -6,6 +6,10 @@ import excel2img as e2i
 import os
 
 from colorizer import colorizer
+from parameters_generator import (generate_column_params, generate_row_params,
+                                  generate_border, generate_column_params,
+                                  generate_column_width, generate_header_params,
+                                  generate_blank_col_row_params, generate_table_params)
 
 
 def full_imager(lst, path):
@@ -25,27 +29,15 @@ def full_imager(lst, path):
     :return:
     """
     colors = colorizer()
-    borders = [
-        Side(border_style="thin", color="000000"),
-        Side(border_style="thin", color="FF0000"),
-        Side(border_style="thin", color="00FF00"),
-        Side(border_style="thin", color="0000FF"),
-        Side(border_style="thin", color="FFFFFF"),
-        Side(border_style="medium", color="000000"),
-        Side(border_style="medium", color="FF0000"),
-        Side(border_style="medium", color="00FF00"),
-        Side(border_style="medium", color="0000FF"),
-        Side(border_style="medium", color="FFFFFF"),
-        Side(border_style="thick", color="000000"),
-        Side(border_style="thick", color="FF0000"),
-        Side(border_style="thick", color="00FF00"),
-        Side(border_style="thick", color="0000FF"),
-        Side(border_style="thick", color="FFFFFF")
-    ]
-    blank_side = Side()
-    blank_border = Border(top=blank_side, left=blank_side, right=blank_side, bottom=blank_side)
     counter = 0
     for f in lst:
+        table_parameters = generate_table_params()
+
+        # Done in this way so mistakes can make more obvious crushes
+        header_parameters = None
+        if table_parameters["is_different_header"]:
+            header_parameters = generate_header_params()
+
         i = 0
         main_book = Workbook()
         main_sheet = main_book.active
@@ -54,8 +46,10 @@ def full_imager(lst, path):
         cell_book = Workbook()
         cell_sheet = cell_book.active
         for l in f:
+            column_parameters = generate_column_params(table_parameters["columns_type"])
+
             j = 0
-            width_of_column = 0
+            max_word_length = 0
 
             # Setting column values:
             column_color = colors[i]
@@ -67,38 +61,63 @@ def full_imager(lst, path):
                 cell_color = colors[17*i+j]
                 cell_fill = PatternFill(patternType='solid', fill_type='solid', fgColor=cell_color)
 
+                # Row operations (one for now):
+                if i == 0:
+                    row_parameters = generate_row_params(font_size=table_parameters["font_size"])
+                    height_of_row = row_parameters["row_height"]
+                    main_sheet.row_dimensions[j+1].height = height_of_row
+                    column_sheet.row_dimensions[j+1].height = height_of_row
+                    cell_sheet.row_dimensions[j+1].height = height_of_row
+
                 # Generating table sheet:
-                selected_borders = choices(borders, k=4)
-                working_cell = main_sheet.cell(row=j+1, column=i+1)
-                working_cell.value = w
-                working_cell.border = Border(top=selected_borders[0], left=selected_borders[1],
-                                             bottom=selected_borders[2], right=selected_borders[3])
-                working_cell.font = Font(name=choice(["Calibri", "Arial", "TimesNewRoman"]),
-                                         bold=choice([True, False]),
-                                         italic=choice([True, False]),
-                                         size=11,
-                                         color=choice(colors[1:]))
+                if table_parameters["is_different_header"] and j==0:
+                    working_cell = main_sheet.cell(row=j+1, column=i+1)
+                    working_cell.value = w
+                    working_cell.border = generate_border(line_style=header_parameters["line_style"],
+                                                          is_border=table_parameters["is_border"],
+                                                          is_partial_border=table_parameters["is_partial_border"])
+                    working_cell.font = Font(name=table_parameters["font_name"],
+                                             bold=header_parameters["font_bold"],
+                                             italic=header_parameters["font_italic"],
+                                             size=header_parameters["font_size"],
+                                             color=choice(colors[1:]))
+                else:
+                    working_cell = main_sheet.cell(row=j+1, column=i+1)
+                    working_cell.value = w
+                    working_cell.border = generate_border(line_style=table_parameters["line_style"],
+                                                          is_border=table_parameters["is_border"],
+                                                          is_partial_border=table_parameters["is_partial_border"])
+                    working_cell.font = Font(name=table_parameters["font_name"],
+                                             # DODO: czy dobrze rozumiem ze poza naglowkiem ma byc zawsze false ponizej?
+                                             # bold=choice([True, False]),
+                                             # italic=choice([True, False]),
+                                             size=table_parameters["font_size"],
+                                             color=choice(colors[1:]))
 
                 # Adjusting column_width value:
-                width_of_column = max(width_of_column, len(str(working_cell.value))*1.5)
+                max_word_length = max(max_word_length, len(str(working_cell.value)))
 
                 # Generating column mask sheet:
                 working_cell = column_sheet.cell(row=j+1, column=i+1)
-                working_cell.border = blank_border
+                working_cell.border = generate_border(line_style=table_parameters["line_style"], is_border=False)
                 working_cell.fill = column_fill
 
                 # Generating cell mask sheet:
                 working_cell = cell_sheet.cell(row=j+1, column=i+1)
-                working_cell.border = blank_border
+                working_cell.border = generate_border(line_style=table_parameters["line_style"], is_border=False)
                 working_cell.fill = cell_fill
 
                 j += 1
 
             # Setting correct column widths in sheets:
+            width_of_column = 1.5*max_word_length
             main_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
             column_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
             cell_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
             i += 1
+
+        # Setting row heights in sheets:
+
 
         # Saving table sheet:
         main_pth = os.path.join(path, 'a' + str(counter) + '.xlsx')

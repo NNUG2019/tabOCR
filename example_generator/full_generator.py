@@ -19,9 +19,7 @@ def full_generator(number, path, height_range=(20, 20), length_range=(20, 20), c
     :return:
     """
 
-    heights = list(range(height_range[0], height_range[1]+1))
-    lengths = list(range(length_range[0], length_range[1]+1))
     cells = list(range(cell_range[0], cell_range[1]+1))
-    lst = full_lister(number=number, cells=cells, heights=heights, lengths=lengths)
+    lst = full_lister(number=number, cells=cells)
     save_csv(lst, path)
     full_imager(lst, path)
