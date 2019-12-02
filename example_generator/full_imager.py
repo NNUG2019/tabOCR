@@ -1,7 +1,7 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import Border, Side, Font, PatternFill
-from random import choices, choice
+from openpyxl.styles import Font, PatternFill
+from random import choice
 import excel2img as e2i
 import os
 
@@ -33,18 +33,26 @@ def full_imager(lst, path):
     for f in lst:
         table_parameters = generate_table_params()
 
+        blank_border = generate_border(line_style=table_parameters["line_style"], is_border=False)
+        white_fill = PatternFill(patternType='solid', fill_type='solid', fgColor="FFFFFF")
+
         # Done in this way so mistakes can make more obvious crushes
         header_parameters = None
         if table_parameters["is_different_header"]:
             header_parameters = generate_header_params()
 
         i = 0
+        row_height_sum = 0
+        column_width_sum = 0
         main_book = Workbook()
         main_sheet = main_book.active
         column_book = Workbook()
         column_sheet = column_book.active
         cell_book = Workbook()
         cell_sheet = cell_book.active
+
+        # because PyCharm doesn't like it otherwise
+        j = 0
         for l in f:
             column_parameters = generate_column_params(table_parameters["columns_type"])
 
@@ -68,6 +76,7 @@ def full_imager(lst, path):
                     main_sheet.row_dimensions[j+1].height = height_of_row
                     column_sheet.row_dimensions[j+1].height = height_of_row
                     cell_sheet.row_dimensions[j+1].height = height_of_row
+                    row_height_sum += height_of_row
 
                 # Generating table sheet:
                 if table_parameters["is_different_header"] and j==0:
@@ -99,24 +108,47 @@ def full_imager(lst, path):
 
                 # Generating column mask sheet:
                 working_cell = column_sheet.cell(row=j+1, column=i+1)
-                working_cell.border = generate_border(line_style=table_parameters["line_style"], is_border=False)
+                working_cell.border = blank_border
                 working_cell.fill = column_fill
 
                 # Generating cell mask sheet:
                 working_cell = cell_sheet.cell(row=j+1, column=i+1)
-                working_cell.border = generate_border(line_style=table_parameters["line_style"], is_border=False)
+                working_cell.border = blank_border
                 working_cell.fill = cell_fill
 
                 j += 1
 
             # Setting correct column widths in sheets:
-            width_of_column = 1.5*max_word_length
+            width_of_column = generate_column_width(font_size=table_parameters["font_size"],
+                                                    max_word_length=max_word_length)["column_width"]
             main_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
             column_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
             cell_sheet.column_dimensions[get_column_letter(i+1)].width = width_of_column
+            column_width_sum += width_of_column
             i += 1
 
-        # Setting row heights in sheets:
+        # Creating blank rows and columns:
+        blank_row_height, blank_column_width = generate_blank_col_row_params(rows_height=row_height_sum,
+                                                                             columns_width=column_width_sum)
+        #main_sheet.cell(row=j + 1, column=i + 1).value = "0"
+        #column_sheet.cell(row=j + 1, column=i + 1).value = "0"
+        #cell_sheet.cell(row=j + 1, column=i + 1).value = "0"
+
+        for n in range(j):
+            main_sheet.cell(row=n + 1, column=i + 1).border = blank_border
+            main_sheet.cell(row=n + 1, column=i + 1).fill = white_fill
+
+        for k in range(i):
+            main_sheet.cell(row=j + 1, column=k + 1).border = blank_border
+            main_sheet.cell(row=j + 1, column=k + 1).fill = white_fill
+
+
+        main_sheet.column_dimensions[get_column_letter(i+1)].width = blank_column_width
+        main_sheet.row_dimensions[j+1].height = blank_row_height
+        column_sheet.column_dimensions[get_column_letter(i+1)].width = blank_column_width
+        column_sheet.row_dimensions[j+1].height = blank_row_height
+        cell_sheet.column_dimensions[get_column_letter(i+1)].width = blank_column_width
+        cell_sheet.row_dimensions[j+1].height = blank_row_height
 
 
         # Saving table sheet:
