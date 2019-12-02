@@ -4,10 +4,11 @@ from openpyxl import Workbook
 from random import choice, choices, randint, random
 
 COLUMNS_NUMBER = np.arange(2,11,1)
-ROWS_NUMBER = np.arange(2,39,1)
+ROWS_NUMBER = np.arange(2,32,1)
 COLUMNS_TYPE = ["string", "number", "mixed"]
 FONT_SIZE = np.arange(9,19,1)
-PIXEL = 7
+PIXEL_COLUMN = 7
+PIXEL_ROW = 4/3
 FONT_NAME = ["Arial", "Book Antiqua", "Calibri", "Cambria",
              "Garamond", "Georgia", "Helvetica", "Times New Roman"]
 LINE_STYLE = ['medium', 'thick', 'thin']
@@ -22,8 +23,8 @@ COLUMN_TYPE = ["string", "number"]
 IS_CONTENT_FIXED = [True, False]
 MIN_COLUMN_WIDTH = 7
 MAX_COLUMN_WIDTH = 31
-MIN_ROW_HEIGHT = 4
-MAX_ROW_HEIGHT = 8
+MIN_ROW_HEIGHT = 30
+MAX_ROW_HEIGHT = 50
 MIN_WORD_LENGTH = 3
 MAX_WORD_LENGTH = 8
 FONT_SIZE_WIDTH = 1
@@ -74,7 +75,7 @@ def generate_border(line_style, is_border=False, is_partial_border=False):
 
 
 def generate_row_params(font_size):
-    min_row_height = MIN_ROW_HEIGHT + 0.2*(font_size-FONT_SIZE[0])
+    min_row_height = MIN_ROW_HEIGHT + 2*(font_size-FONT_SIZE[0])
     row_height = np.arange(MIN_ROW_HEIGHT, MAX_ROW_HEIGHT+1, 1)
     row_height = row_height[row_height>=min_row_height]
     return {"row_height": choice(row_height)}
@@ -109,8 +110,7 @@ def generate_column_width(font_size, word_max_length):
     return {"column_width": choice(column_width)}
 
 
-def generate_blank_col_row_params(rows_number, row_height,
-                                  columns_width):
-    blank_row_height = IMG_SHAPE[0] - rows_number*row_height*PIXEL
-    blank_col_width = IMG_SHAPE[1] - columns_width*PIXEL
-    return blank_row_height, blank_col_width
+def generate_blank_col_row_params(rows_height, columns_width):
+    blank_row_height = IMG_SHAPE[0] - rows_height*PIXEL_ROW
+    blank_col_width = IMG_SHAPE[1] - columns_width*PIXEL_COLUMN
+    return blank_row_height/PIXEL_ROW, blank_col_width/PIXEL_COLUMN
