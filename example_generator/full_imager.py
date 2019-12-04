@@ -62,7 +62,13 @@ def full_imager(lst, path):
             # Setting column values:
             column_color = colors[i]
             column_fill = PatternFill(patternType='solid', fill_type='solid', fgColor=column_color)
-
+            if table_parameters["is_different_header"]:
+                header_column_border = generate_border(line_style=header_parameters["line_style"],
+                                                       is_border=table_parameters["is_border"],
+                                                       is_partial_border=table_parameters["is_partial_border"])
+            text_column_border = generate_border(line_style=table_parameters["line_style"],
+                                                 is_border=table_parameters["is_border"],
+                                                 is_partial_border=table_parameters["is_partial_border"])
             for w in l:
                 # Setting cell values:
                     # 17 so the color won't repeat!
@@ -82,9 +88,7 @@ def full_imager(lst, path):
                 if table_parameters["is_different_header"] and j==0:
                     working_cell = main_sheet.cell(row=j+1, column=i+1)
                     working_cell.value = w
-                    working_cell.border = generate_border(line_style=header_parameters["line_style"],
-                                                          is_border=table_parameters["is_border"],
-                                                          is_partial_border=table_parameters["is_partial_border"])
+                    working_cell.border = header_column_border
                     working_cell.font = Font(name=table_parameters["font_name"],
                                              bold=header_parameters["font_bold"],
                                              italic=header_parameters["font_italic"],
@@ -93,9 +97,7 @@ def full_imager(lst, path):
                 else:
                     working_cell = main_sheet.cell(row=j+1, column=i+1)
                     working_cell.value = w
-                    working_cell.border = generate_border(line_style=table_parameters["line_style"],
-                                                          is_border=table_parameters["is_border"],
-                                                          is_partial_border=table_parameters["is_partial_border"])
+                    working_cell.border = text_column_border
                     working_cell.font = Font(name=table_parameters["font_name"],
                                              # DODO: czy dobrze rozumiem ze poza naglowkiem ma byc zawsze false ponizej?
                                              # bold=choice([True, False]),
@@ -137,10 +139,18 @@ def full_imager(lst, path):
         for n in range(j):
             main_sheet.cell(row=n + 1, column=i + 1).border = blank_border
             main_sheet.cell(row=n + 1, column=i + 1).fill = white_fill
+            cell_sheet.cell(row=n + 1, column=i + 1).border = blank_border
+            cell_sheet.cell(row=n + 1, column=i + 1).fill = white_fill
+            column_sheet.cell(row=n + 1, column=i + 1).border = blank_border
+            column_sheet.cell(row=n + 1, column=i + 1).fill = white_fill
 
         for k in range(i):
             main_sheet.cell(row=j + 1, column=k + 1).border = blank_border
             main_sheet.cell(row=j + 1, column=k + 1).fill = white_fill
+            cell_sheet.cell(row=j + 1, column=k + 1).border = blank_border
+            cell_sheet.cell(row=j + 1, column=k + 1).fill = white_fill
+            column_sheet.cell(row=j + 1, column=k + 1).border = blank_border
+            column_sheet.cell(row=j + 1, column=k + 1).fill = white_fill
 
 
         main_sheet.column_dimensions[get_column_letter(i+1)].width = blank_column_width
