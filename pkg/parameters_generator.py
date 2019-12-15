@@ -10,6 +10,8 @@ MAX_FONT_SIZE = 18
 COLUMNS_NUMBER = np.arange(MIN_COLUMNS_NUMBER, MAX_COLUMNS_NUMBER+1, 1)
 ROWS_NUMBER = np.arange(MIN_ROWS_NUMBER, MAX_ROWS_NUMBER, 1)
 FONT_SIZE = np.arange(MIN_FONT_SIZE, MAX_FONT_SIZE+1, 1)
+ROUND_RANGE = [0, 1, 2, 3, 4, 5]
+NUMBER_RANGE = [1, 10, 100, 1000, 10000, 100000, 1000000]
 COLUMNS_TYPE = ["string", "number", "mixed"]
 FONT_NAME = ["Arial", "Book Antiqua", "Calibri", "Cambria",
              "Garamond", "Georgia", "Helvetica", "Times New Roman"]
@@ -24,7 +26,7 @@ IS_DIFFERENT_HEADER = [True, False]
 IS_COLUMNS_WIDTH_FIXED = [True, False]
 WORD_TYPE = [str.lower, str.upper, str.title]
 NUMBER_TYPE = [int, float]
-COLUMN_TYPE = ["string", "number"]
+COLUMN_TYPE = ["string", "number", "mixed"]
 IS_CONTENT_FIXED = [True, False]
 COLORS = ["FF0000", "00FF00", "0000FF", "FFFF00", "00FFFF",
           "FF00FF", "008080", "808080", "800000", "008000"]
@@ -102,11 +104,13 @@ def generate_words_params(column_type):
     if choice(IS_CONTENT_FIXED):
         min_length = max_length = choice(np.arange(MIN_WORD_LENGTH,
                                                    MAX_WORD_LENGTH, 1))
-        round_range = [choice([0, 1, 2, 3, 4])]
+        min_number_length = max_number_length = choice(np.arange(1,
+                                                       MAX_WORD_LENGTH, 1))
     else:
         min_length = MIN_WORD_LENGTH
         max_length = MAX_WORD_LENGTH
-        round_range = [0, 1, 2, 3, 4]
+        min_number_length = 1
+        max_number_length = MAX_WORD_LENGTH
 
     return {
         "column_type": column_type if column_type in ["string", "number"]
@@ -115,7 +119,10 @@ def generate_words_params(column_type):
         "number_type": choice(NUMBER_TYPE),
         "min_length": min_length,
         "max_length": max_length,
-        "round_range": round_range
+        "min_number_length": min_number_length,
+        "max_number_length": max_number_length,
+        "separator": choice(["_", "-", " - ", "/", ",", ", ", " "]),
+        'is_word_first': choice([True, False])
     }
 
 

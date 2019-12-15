@@ -1,9 +1,10 @@
-from random import choice, random
+from random import choice, random, randrange
 import numpy as np
 import yaml
 from os.path import join
 from itertools import groupby
-from parameters_generator import generate_words_params, COLUMN_TYPE
+from parameters_generator import (generate_words_params, COLUMN_TYPE,
+                                  ROUND_RANGE, NUMBER_RANGE, MAX_WORD_LENGTH)
 
 
 def define_words_list(path=""):
@@ -82,6 +83,9 @@ def words_generator(words_corpus, rows_number, columns_type):
         numbers = [number_generator(words_params)
                    for r in range(1, (rows_number+1))]
         return add_string_header(numbers, words_corpus, words_params)
+    elif columns_type == "mixed":
+        return [mixed_generator(words_corpus, words_params)
+                for r in range(1, (rows_number+1))]
     else:
         raise ValueError("No such type of column {}".format(columns_type))
 
@@ -112,5 +116,31 @@ def number_generator(words_params):
             int: single number (int/float)
     """
     number_type = words_params['number_type']
-    return str(round(number_type(random()*choice([1, 10, 100, 1000])),
-                     choice(words_params['round_range'])))
+    length = choice(np.arange(words_params['min_number_length'],
+                              words_params['max_number_length']+1, 1))
+    number_length = choice(np.arange(1, length+1))
+    round_length = choice(np.arange(0, (length-number_length)+1))
+    number_range = choice(NUMBER_RANGE[:(number_length+1)])
+    round_range = choice(ROUND_RANGE[:(round_length+1)])
+
+    if (number_length == 1) and (round_length == 0):
+        return str(int(random()*10))
+    else:
+        return str(round(number_type(random()*number_range), round_range))
+
+
+def mixed_generator(words_corpus, words_params):
+    """ """
+    word_type = words_params['word_type']
+    length = choice(np.arange(words_params['min_length'],
+                              words_params['max_length']+1, 1))
+    number_range = [10, 100, 1000][:MAX_WORD_LENGTH - (length-1)]
+    number_range = choice(number_range)
+    number = str(randrange(0, number_range))
+    sep = words_params['separator']
+    if length > 3:
+        word = choice(words_corpus[length-1])
+        word_first = words_params['is_word_first']
+        return word + sep + number if word_first else number + sep + word
+    else:
+        return word_type(choice(words_corpus[length]))
