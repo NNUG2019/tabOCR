@@ -7,6 +7,7 @@ from os import remove
 from copy import copy
 import json
 from skimage.io import imread, imsave
+from skimage.color import rgb2gray
 import numpy as np
 from parameters_generator import (generate_table_params, COLORS, IMG_SHAPE,
                                   generate_header_params, generate_rows_height,
@@ -25,7 +26,7 @@ def convert_to_numeric(words_list):
         :Returns:
             list: column content (numbers stored as text converted to numbers)
     """
-    if words_list[1].isdigit():
+    if all(map(lambda s: s.isdigit(), words_list)):
         return [words_list[0]] + list(map(int, words_list[1:]))
     else:
         try:
@@ -158,7 +159,7 @@ def save_data(path, table_wb, mask_wb, single_column_wb, words_list, table_nb):
     zero_padding(join(path, table_img_name), IMG_SHAPE)
     mask_wb.save(join(path, mask_name))
     export_img(join(path, mask_name), join(path, mask_img_name))
-    zero_padding(join(path, mask_img_name), IMG_SHAPE)
+    zero_padding(join(path, mask_img_name), IMG_SHAPE, convert_to_gray=True)
     remove(join(path, mask_name))
     col_nb = 0
     for col, words in zip(single_column_wb, words_list):
@@ -174,7 +175,7 @@ def save_data(path, table_wb, mask_wb, single_column_wb, words_list, table_nb):
         col_nb += 1
 
 
-def zero_padding(img_name, img_size):
+def zero_padding(img_name, img_size, convert_to_gray=False):
     """ Image zero padding to align image shapes to defined shape, common
         to all images.
         :Arguments:
@@ -184,11 +185,28 @@ def zero_padding(img_name, img_size):
             saved, zero padded image
     """
     img = imread(img_name)
-    pad = ((0, img_size[0]-img.shape[0]),
-           (0, img_size[1]-img.shape[1]),
+    pad = ((0, (img_size[0]-img.shape[0]+1)),
+           (0, (img_size[1]-img.shape[1]+1)),
            (0, 0))
+    img = img[1:, 1:, :]
     img = np.pad(img, pad_width=pad, mode='constant', constant_values=(0))
-    imsave(img_name, img)
+    if convert_to_gray:
+        imsave(img_name, rgb2labels(img))
+    else:
+        imsave(img_name, img)
+
+
+def rgb2labels(img):
+    """ Convert RGB mask to gray mask.
+        :Arguments:
+            img: numpy array:: image (mask) in RGB
+        :Returns:
+            saved, grayscale image (mask)
+    """
+    img = (rgb2gray(img)*255).astype('uint8')
+    for label, color in enumerate(np.unique(img)[1:]):
+        img[img == color] = label+1
+    return img
 
 
 def generate_dataset(table_nb, words_corpus, path=""):
