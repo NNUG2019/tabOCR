@@ -4,14 +4,16 @@ from openpyxl.utils import get_column_letter
 from os.path import join, exists
 from os import mkdir
 from os import remove
+from shutil import rmtree
 from copy import copy
 import json
 from skimage.io import imread, imsave
 from skimage.color import rgb2gray
 import numpy as np
-from parameters_generator import (generate_table_params, COLORS, IMG_SHAPE,
+from parameters_generator import (generate_table_params, IMG_SHAPE,
                                   generate_header_params, generate_rows_height,
-                                  generate_columns_width, IMG_COL_SHAPE)
+                                  generate_columns_width, IMG_COL_SHAPE,
+                                  MAX_ROW_HEIGHT, PIXEL_ROW)
 from style_generator import (generate_border, generate_font,
                              generate_alingment, generate_pattern_fill)
 from word_generator import generate_words, define_words_list
@@ -110,15 +112,43 @@ def generate_masks(columns_number, rows_number, column_widths, rows_height):
     """
     workbook = Workbook()
     sheet = workbook.active
+    colors = generate_colors(columns_number, rows_number)
     for c in range(columns_number):
         for r in range(rows_number):
             cell = sheet.cell(r+1, c+1)
             sheet.row_dimensions[r+1].height = rows_height
             sheet.column_dimensions[get_column_letter(c+1)].width =\
                 column_widths[c]
-            cell.fill = generate_pattern_fill(COLORS[c])
+            cell.fill = generate_pattern_fill(colors[c])
 
     return workbook
+
+
+def generate_colors(columns_number, rows_number):
+    """ """
+    for c in range(columns_number):
+        for r in range(rows_number):
+            colors = ['#%02x%02x%02x' % (c, c, c)
+                      for c in range(5, 5*columns_number*rows_number+5, 5)]
+    return list(map(lambda s: s.strip('#').upper(), colors))
+
+
+def generate_cell_mask(columns_number, rows_number, column_widths,
+                       rows_height):
+    """ """
+    colors = generate_colors(columns_number, rows_number)
+    single_columns = []
+    for c in range(columns_number):
+        workbook = Workbook()
+        sheet = workbook.active
+        for r in range(rows_number):
+            cell = sheet.cell(r+1, c+1)
+            sheet.row_dimensions[r+1].height = rows_height
+            sheet.column_dimensions[get_column_letter(c+1)].width =\
+                column_widths[c]
+            cell.fill = generate_pattern_fill(colors[r])
+        single_columns.append(copy(workbook))
+    return single_columns
 
 
 def generate_columns_images(ref_workbook, table_params):
@@ -149,7 +179,37 @@ def generate_columns_images(ref_workbook, table_params):
     return single_columns
 
 
-def save_data(path, table_wb, mask_wb, single_column_wb, words_list, table_nb):
+def generate_cells_images(ref_workbook, table_params):
+    """ Generate column images.
+        :Arguments:
+            ref_workbook: workbook:: table workbook
+            table_params: dict:: randomly generated table parameters
+        :Returns:
+            list: list of column workbooks
+    """
+    ref_sheet = ref_workbook.active
+    cells = []
+    for c in range(table_params['columns_number']):
+        single_cells = []
+        for r in range(table_params['rows_number']):
+            new_workbook = Workbook()
+            new_sheet = new_workbook.active
+            ref_cell = ref_sheet.cell(r+1, c+1)
+            new_cell = new_sheet.cell(r+1, c+1)
+            new_cell.value = copy(ref_cell.value)
+            new_cell.font = copy(ref_cell.font)
+            new_cell.alignment = copy(ref_cell.alignment)
+            new_sheet.row_dimensions[r+1].height =\
+                copy(ref_sheet.row_dimensions[r+1].height)
+            new_sheet.column_dimensions[get_column_letter(c+1)].width =\
+                copy(ref_sheet.column_dimensions[get_column_letter(c+1)].width)
+            single_cells.append(copy(new_workbook))
+        cells.append(single_cells)
+    return cells
+
+
+def save_data(path, table_wb, mask_wb, cell_mask, single_column_wb,
+              single_cells_wb, words_list, table_nb):
     """ Save .xlsx, .png and .json files for table, mask, columns,
         column content etc.
         :Arguments:
@@ -166,30 +226,64 @@ def save_data(path, table_wb, mask_wb, single_column_wb, words_list, table_nb):
         path = "dataset/"
     if not exists(path):
         mkdir(path)
+    dir_name = join(path, str(table_nb))
+    if exists(dir_name):
+        rmtree(dir_name)
+    mkdir(dir_name)
+
     table_name = str(table_nb) + "_table" + ".xlsx"
     table_img_name = str(table_nb) + "_table" + ".png"
     mask_name = str(table_nb) + "_mask" + ".xlsx"
     mask_img_name = str(table_nb) + "_mask" + ".png"
 
-    table_wb.save(join(path, table_name))
-    export_img(join(path, table_name), join(path, table_img_name))
-    zero_padding(join(path, table_img_name), IMG_SHAPE)
-    mask_wb.save(join(path, mask_name))
-    export_img(join(path, mask_name), join(path, mask_img_name))
-    zero_padding(join(path, mask_img_name), IMG_SHAPE, convert_to_gray=True)
-    remove(join(path, mask_name))
+    table_wb.save(join(dir_name, table_name))
+    export_img(join(dir_name, table_name), join(dir_name, table_img_name))
+    zero_padding(join(dir_name, table_img_name), IMG_SHAPE)
+    mask_wb.save(join(dir_name, mask_name))
+    export_img(join(dir_name, mask_name), join(dir_name, mask_img_name))
+    zero_padding(join(dir_name, mask_img_name), IMG_SHAPE, convert_to_gray=True)
+    remove(join(dir_name, mask_name))
     col_nb = 0
-    for col, words in zip(single_column_wb, words_list):
+    for col, col_mask, words in zip(single_column_wb, cell_mask, words_list):
         col_name = str(table_nb) + "_column_" + str(col_nb) + ".xlsx"
         col_img_name = str(table_nb) + "_column_" + str(col_nb) + ".png"
         col_text_name = str(table_nb) + "_column_" + str(col_nb) + ".json"
-        col.save(join(path, col_name))
-        export_img(join(path, col_name), join(path, col_img_name))
-        zero_padding(join(path, col_img_name), IMG_COL_SHAPE)
-        remove(join(path, col_name))
-        with open(join(path, col_text_name), 'w') as outfile:
+
+        col_mask_name = str(table_nb) + "_column_mask" + str(col_nb) + ".xlsx"
+        col_mask_img_name =\
+            str(table_nb) + "_column_mask_" + str(col_nb) + ".png"
+
+        col.save(join(dir_name, col_name))
+        export_img(join(dir_name, col_name), join(dir_name, col_img_name))
+        zero_padding(join(dir_name, col_img_name), IMG_COL_SHAPE)
+        remove(join(dir_name, col_name))
+
+        col_mask.save(join(dir_name, col_mask_name))
+        export_img(join(dir_name, col_mask_name), join(dir_name, col_mask_img_name))
+        zero_padding(join(dir_name, col_mask_img_name), IMG_COL_SHAPE)
+        remove(join(dir_name, col_mask_name))
+
+        with open(join(dir_name, col_text_name), 'w') as outfile:
             json.dump(words, outfile)
         col_nb += 1
+    cell_nb = 0
+    col = 0
+    row = 0
+    for cells, words in zip(single_cells_wb, words_list):
+        for cell, word in zip(cells, words):
+            cell_name = str(table_nb) + "_cell_" + str(col) + "_" + str(row) + ".xlsx"
+            cell_img_name = str(table_nb) + "_cell_" + str(col) + "_" + str(row) + ".png"
+            cell_text_name = str(table_nb) + "_cell_" + str(col) + "_" + str(row) + ".json"
+            cell.save(join(dir_name, cell_name))
+            export_img(join(dir_name, cell_name), join(dir_name, cell_img_name))
+            zero_padding(join(dir_name, cell_img_name),
+                         (int(MAX_ROW_HEIGHT*PIXEL_ROW), IMG_COL_SHAPE[1]))
+            remove(join(dir_name, cell_name))
+            with open(join(dir_name, cell_text_name), 'w') as outfile:
+                json.dump(word, outfile)
+            cell_nb += 1
+            row += 1
+        col += 1
 
 
 def zero_padding(img_name, img_size, convert_to_gray=False):
@@ -269,7 +363,8 @@ def generate_dataset(table_nb, words_corpus, path=""):
                              table_params['rows_number'], column_widths,
                              rows_height)
     single_columns_wb = generate_columns_images(table_wb, table_params)
-    save_data(path, table_wb, mask_wb, single_columns_wb,
+    single_cells_wb = generate_cells_images(table_wb, table_params)
+    save_data(path, table_wb, mask_wb, single_columns_wb, single_cells_wb,
               words_list, table_nb)
 
 
@@ -316,9 +411,14 @@ def generate_dataset_parallel(table_nbs, words_corpus, path=""):
                 mask_wb = generate_masks(table_params['columns_number'],
                                          table_params['rows_number'], columns_width,
                                          rows_height)
+                cell_mask = generate_cell_mask(table_params['columns_number'],
+                                               table_params['rows_number'],
+                                               columns_width, rows_height)
                 single_columns_wb = generate_columns_images(table_wb, table_params)
-                save_data(path, table_wb, mask_wb, single_columns_wb,
-                          words_list, table_nb)
+                single_cells_wb = generate_cells_images(table_wb, table_params)
+                save_data(path, table_wb, mask_wb, cell_mask,
+                          single_columns_wb, single_cells_wb, words_list,
+                          table_nb)
                 should_repeat = False
                 logger.info("Table was generated succesfuly")
             except Exception as e:
@@ -371,5 +471,7 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
 
 if __name__ == "__main__":
     dataset_generator(
-        6000,  # config_path="F://studia//Doktorat//Badania//tabOCR//config")
+        10,
+        # save_path = "F://studia//Doktorat//Badania//tabOCR//test_dataset"
+        # config_path = "...//config"
     )
