@@ -77,7 +77,7 @@ def generate_border(line_style, is_border=False, is_partial_border=False):
     if is_border:
         style = define_border_style(line_style, color="000000")
         if is_partial_border:
-            side = choice(["top", "left"])
+            side = choice(["bottom", "right"])
             style = define_border_style(line_style)
             style = {**style, side: define_border(line_style, color="000000")}
         return Border(**style)

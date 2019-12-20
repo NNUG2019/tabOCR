@@ -1,5 +1,8 @@
 import numpy as np
 from random import choice
+import logging
+
+logger = logging.getLogger("logs")
 
 MIN_COLUMNS_NUMBER = 2
 MAX_COLUMNS_NUMBER = 10
@@ -8,7 +11,7 @@ MAX_ROWS_NUMBER = 30
 MIN_FONT_SIZE = 9
 MAX_FONT_SIZE = 18
 COLUMNS_NUMBER = np.arange(MIN_COLUMNS_NUMBER, MAX_COLUMNS_NUMBER+1, 1)
-ROWS_NUMBER = np.arange(MIN_ROWS_NUMBER, MAX_ROWS_NUMBER, 1)
+ROWS_NUMBER = np.arange(MIN_ROWS_NUMBER, MAX_ROWS_NUMBER+1, 1)
 FONT_SIZE = np.arange(MIN_FONT_SIZE, MAX_FONT_SIZE+1, 1)
 ROUND_RANGE = [0, 1, 2, 3, 4, 5]
 NUMBER_RANGE = [1, 10, 100, 1000, 10000, 100000, 1000000]
@@ -31,6 +34,15 @@ IS_CONTENT_FIXED = [True, False]
 COLORS = ["FF0000", "00FF00", "0000FF", "FFFF00", "00FFFF",
           "FF00FF", "008080", "808080", "800000", "008000"]
 
+COLORS_FAMILY = {'yellow': ['f1c232', 'ff3599', 'fff2cc', 'ffffff'],
+                 'blue': ['6d9ebb', 'a4c2f4', 'c9daf8', 'ffffff'],
+                 'green': ['93c47d', 'b6d7a8', 'd9ead3', 'ffffff'],
+                 'cyan': ['76a5af', 'a2c4c9', 'd0e0e3', 'ffffff'],
+                 'red': ['e06666', 'ea9999', 'f4cccc', 'ffffff'],
+                 'orange': ['f6b26b', 'f9cv9c', 'fce5cd', 'ffffff'],
+                 'gray': ['cccccc', 'd9d9d9', 'efefef', 'ffffff']}
+
+
 PIXEL_COLUMN = 7
 PIXEL_ROW = 4/3
 FONT_SIZE_WIDTH = 0.5
@@ -49,7 +61,8 @@ MIN_ROW_HEIGHT = 30
 MAX_ROW_HEIGHT = 50
 # TODO - parametrize according to the MAX_COLUMNS_WIDTH and columns number
 IMG_SHAPE = (2200, 2200)
-IMG_COL_SHAPE = (2200, PIXEL_COLUMN*(MAX_COLUMN_WIDTH + 30))
+IMG_COL_SHAPE = (2200, PIXEL_COLUMN*(
+    MAX_COLUMN_WIDTH + int(MAX_COLUMNS_WIDTH/MAX_COLUMNS_NUMBER)))
 
 
 def generate_table_params():
@@ -103,9 +116,9 @@ def generate_words_params(column_type):
     """
     if choice(IS_CONTENT_FIXED):
         min_length = max_length = choice(np.arange(MIN_WORD_LENGTH,
-                                                   MAX_WORD_LENGTH, 1))
+                                                   MAX_WORD_LENGTH+1, 1))
         min_number_length = max_number_length = choice(np.arange(1,
-                                                       MAX_WORD_LENGTH, 1))
+                                                       MAX_WORD_LENGTH+1, 1))
     else:
         min_length = MIN_WORD_LENGTH
         max_length = MAX_WORD_LENGTH
@@ -121,8 +134,9 @@ def generate_words_params(column_type):
         "max_length": max_length,
         "min_number_length": min_number_length,
         "max_number_length": max_number_length,
-        "separator": choice(["_", "-", " - ", "/", ",", ", ", " "]),
-        'is_word_first': choice([True, False])
+        "separator": choice(["_", "-", " - ", "/", ",", ", ", " ", ""]),
+        'is_word_first': choice([True, False]),
+        'is_change_separator': choice([True, False])
     }
 
 
@@ -185,10 +199,16 @@ def generate_fixed_column_width(minimum_column_widths):
     max_column_width = int(MAX_COLUMNS_WIDTH/len(minimum_column_widths))
     if max_column_width > MAX_COLUMN_WIDTH:
         width = choice(np.arange(max(minimum_column_widths),
-                                 MAX_COLUMN_WIDTH, 1))
+                                 MAX_COLUMN_WIDTH+1, 1))
     else:
-        width = choice(np.arange(max(minimum_column_widths),
-                       max_column_width, 1))
+        try:
+            width = choice(np.arange(max(minimum_column_widths),
+                           max_column_width+1, 1))
+        except IndexError:
+            logger.error("Wrong columns width; max_column_width: {}, "
+                         "minimum_column_widths: {}".
+                         format(max_column_width, minimum_column_widths))
+            raise
     return [width for c in range(len(minimum_column_widths))]
 
 
@@ -212,7 +232,7 @@ def generate_variable_column_width(minimum_column_widths, max_words_length,
         :Returns:
             list: column widths (variable)
     """
-    free_columns_space = 310 - sum(minimum_column_widths)
+    free_columns_space = MAX_COLUMNS_WIDTH - sum(minimum_column_widths)
     width = free_columns_space
     columns_width = []
     for min_col_width in minimum_column_widths:
@@ -221,12 +241,12 @@ def generate_variable_column_width(minimum_column_widths, max_words_length,
         else:
             if free_columns_space > (MAX_COLUMN_WIDTH):
                 width = np.arange(min_col_width,
-                                  (MAX_COLUMN_WIDTH + min_col_width), 1)
+                                  (MAX_COLUMN_WIDTH + min_col_width)+1, 1)
                 width = choice(width)
                 free_columns_space -= width
             else:
                 width = np.arange(min_col_width,
-                                  free_columns_space + min_col_width, 1)
+                                  (free_columns_space + min_col_width)+1, 1)
                 width = choice(width)
                 free_columns_space -= width
         columns_width.append(width)

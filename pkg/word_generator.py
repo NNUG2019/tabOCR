@@ -1,10 +1,14 @@
 from random import choice, random, randrange
 import numpy as np
 import yaml
+import logging
 from os.path import join
 from itertools import groupby
 from parameters_generator import (generate_words_params, COLUMN_TYPE,
-                                  ROUND_RANGE, NUMBER_RANGE, MAX_WORD_LENGTH)
+                                  ROUND_RANGE, NUMBER_RANGE, MAX_WORD_LENGTH,
+                                  MIN_WORD_LENGTH)
+
+logger = logging.getLogger("logs")
 
 
 def define_words_list(path=""):
@@ -82,10 +86,15 @@ def words_generator(words_corpus, rows_number, columns_type):
     elif columns_type == "number":
         numbers = [number_generator(words_params)
                    for r in range(1, (rows_number+1))]
+        if list(filter(lambda x: x > 8, map(lambda x: len(x), numbers))):
+            logger.debug("Numbers: {}".format(numbers))
         return add_string_header(numbers, words_corpus, words_params)
     elif columns_type == "mixed":
-        return [mixed_generator(words_corpus, words_params)
-                for r in range(1, (rows_number+1))]
+        mixed = [mixed_generator(words_corpus, words_params)
+                 for r in range(1, (rows_number+1))]
+        if list(filter(lambda x: x > 8, map(lambda x: len(x), mixed))):
+            logger.debug("Mixed: {}".format(mixed))
+        return add_string_header(mixed, words_corpus, words_params)
     else:
         raise ValueError("No such type of column {}".format(columns_type))
 
@@ -100,11 +109,24 @@ def word_generator(words_corpus, words_params):
         :Returns:
             str: single word
     """
+    is_change_separator = words_params['is_change_separator']
     word_type = words_params['word_type']
+    is_double_word = choice([True, False])
     length = choice(np.arange(words_params['min_length'],
                               words_params['max_length']+1, 1))
-    word = choice(words_corpus[length])
-    return word_type(word)
+    word1 = choice(words_corpus[length])
+    free_space = MAX_WORD_LENGTH - length
+    if free_space > 3:
+        if is_double_word:
+            word2 = choice(words_corpus[choice(np.arange(MIN_WORD_LENGTH,
+                                                         free_space))])
+        else:
+            return word_type(word1)
+        if is_change_separator:
+            return word_type(word1 + choice([" ", ",", "/", "-"]) + word2)
+        else:
+            return word_type(word1 + " " + word2)
+    return word_type(word1)
 
 
 def number_generator(words_params):
@@ -122,7 +144,6 @@ def number_generator(words_params):
     round_length = choice(np.arange(0, (length-number_length)+1))
     number_range = choice(NUMBER_RANGE[:(number_length+1)])
     round_range = choice(ROUND_RANGE[:(round_length+1)])
-
     if (number_length == 1) and (round_length == 0):
         return str(int(random()*10))
     else:
@@ -130,6 +151,26 @@ def number_generator(words_params):
 
 
 def mixed_generator(words_corpus, words_params):
+    """ """
+    word_type = words_params['word_type']
+    length = choice(np.arange(words_params['min_length'],
+                              words_params['max_length']+1, 1))
+    sep = words_params['separator']
+    free_space = length - len(sep)
+    if free_space > 3:
+        word_length = choice(np.arange(MIN_WORD_LENGTH, (free_space-1)+1, 1))
+        word = choice(words_corpus[word_length])
+        free_space -= word_length
+        number_range = [10, 100, 1000][:free_space]
+        number_range = choice(number_range)
+        number = str(randrange(0, number_range))
+        word_first = words_params['is_word_first']
+        return word_type(word + sep + number) if word_first else word_type(number + sep + word)
+    else:
+        return word_type(choice(words_corpus[length]))
+
+
+def mixed_generator2(words_corpus, words_params):
     """ """
     word_type = words_params['word_type']
     length = choice(np.arange(words_params['min_length'],
