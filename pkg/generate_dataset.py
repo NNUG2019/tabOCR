@@ -16,6 +16,23 @@ from style_generator import (generate_border, generate_font,
                              generate_alingment, generate_pattern_fill)
 from word_generator import generate_words, define_words_list
 import multiprocessing as mp
+import logging
+import warnings
+import traceback
+
+warnings.simplefilter("ignore", UserWarning)
+
+logger = logging.getLogger("logs")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+fh = logging.FileHandler('logs.txt')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 
 def convert_to_numeric(words_list):
@@ -189,7 +206,11 @@ def zero_padding(img_name, img_size, convert_to_gray=False):
            (0, (img_size[1]-img.shape[1]+1)),
            (0, 0))
     img = img[1:, 1:, :]
-    img = np.pad(img, pad_width=pad, mode='constant', constant_values=(0))
+    try:
+        img = np.pad(img, pad_width=pad, mode='constant', constant_values=(0))
+    except Exception as e:
+        logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
+        raise
     if convert_to_gray:
         imsave(img_name, rgb2labels(img))
     else:
@@ -267,33 +288,42 @@ def generate_dataset_parallel(table_nbs, words_corpus, path=""):
             .json column content
     """
     for table_nb in table_nbs:
-        # generate table parameters
-        table_params = generate_table_params()
-        # generate table content
-        words_list = generate_words(words_corpus,
-                                    table_params['columns_number'],
-                                    table_params['rows_number'],
-                                    table_params['columns_type'])
-        # generate column and row size
-        columns_width = generate_columns_width(words_list, table_params)
-        rows_height = generate_rows_height(table_params['font_size'])
-        # generate table styles
-        border = generate_border(table_params['line_style'],
-                                 table_params['is_border'],
-                                 table_params['is_partial_border'])
-        font = generate_font(table_params['font_name'],
-                             table_params['font_size'])
-        alignment = generate_alingment(table_params['horizontal_alingment'],
-                                       table_params['vertical_alingment'])
-        # generate table
-        table_wb = generate_table(words_list, table_params, font, border,
-                                  alignment, rows_height, columns_width)
-        mask_wb = generate_masks(table_params['columns_number'],
-                                 table_params['rows_number'], columns_width,
-                                 rows_height)
-        single_columns_wb = generate_columns_images(table_wb, table_params)
-        save_data(path, table_wb, mask_wb, single_columns_wb,
-                  words_list, table_nb)
+        logger.info("Generate table no. {}".format(table_nb))
+        should_repeat = True
+        while should_repeat:
+            try:
+                # generate table parameters
+                table_params = generate_table_params()
+                # generate table content
+                words_list = generate_words(words_corpus,
+                                            table_params['columns_number'],
+                                            table_params['rows_number'],
+                                            table_params['columns_type'])
+                # generate column and row size
+                columns_width = generate_columns_width(words_list, table_params)
+                rows_height = generate_rows_height(table_params['font_size'])
+                # generate table styles
+                border = generate_border(table_params['line_style'],
+                                         table_params['is_border'],
+                                         table_params['is_partial_border'])
+                font = generate_font(table_params['font_name'],
+                                     table_params['font_size'])
+                alignment = generate_alingment(table_params['horizontal_alingment'],
+                                               table_params['vertical_alingment'])
+                # generate table
+                table_wb = generate_table(words_list, table_params, font, border,
+                                          alignment, rows_height, columns_width)
+                mask_wb = generate_masks(table_params['columns_number'],
+                                         table_params['rows_number'], columns_width,
+                                         rows_height)
+                single_columns_wb = generate_columns_images(table_wb, table_params)
+                save_data(path, table_wb, mask_wb, single_columns_wb,
+                          words_list, table_nb)
+                should_repeat = False
+                logger.info("Table was generated succesfuly")
+            except Exception as e:
+                tb = traceback.format_exc()
+                logger.error(tb)
 
 
 def make_chunks(lst, n):
@@ -340,4 +370,6 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
 
 
 if __name__ == "__main__":
-    dataset_generator(10)
+    dataset_generator(
+        6000,  # config_path="F://studia//Doktorat//Badania//tabOCR//config")
+    )
