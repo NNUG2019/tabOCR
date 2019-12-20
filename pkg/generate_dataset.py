@@ -371,5 +371,5 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
 
 if __name__ == "__main__":
     dataset_generator(
-        6000,  # config_path="F://studia//Doktorat//Badania//tabOCR//config")
+        100,  # config_path="F://studia//Doktorat//Badania//tabOCR//config")
     )
