@@ -4,7 +4,6 @@ from openpyxl.utils import get_column_letter
 from os.path import join, exists
 from os import mkdir
 from os import remove
-from copy import copy
 import json
 from skimage.io import imread, imsave
 from skimage.color import rgb2gray
@@ -123,34 +122,6 @@ def generate_masks(columns_number, rows_number, column_widths, rows_height):
     return workbook
 
 
-def generate_columns_images(ref_workbook, table_params):
-    """ Generate column images.
-        :Arguments:
-            ref_workbook: workbook:: table workbook
-            table_params: dict:: randomly generated table parameters
-        :Returns:
-            list: list of column workbooks
-    """
-    ref_sheet = ref_workbook.active
-    single_columns = []
-    for c in range(table_params['columns_number']):
-        new_workbook = Workbook()
-        new_sheet = new_workbook.active
-        for r in range(table_params['rows_number']):
-            ref_cell = ref_sheet.cell(r+1, c+1)
-            new_cell = new_sheet.cell(r+1, c+1)
-            new_cell.value = copy(ref_cell.value)
-            new_cell.border = copy(ref_cell.border)
-            new_cell.font = copy(ref_cell.font)
-            new_cell.alignment = copy(ref_cell.alignment)
-            new_sheet.row_dimensions[r+1].height =\
-                copy(ref_sheet.row_dimensions[r+1].height)
-            new_sheet.column_dimensions[get_column_letter(c+1)].width =\
-                copy(ref_sheet.column_dimensions[get_column_letter(c+1)].width)
-        single_columns.append(copy(new_workbook))
-    return single_columns
-
-
 def generate_colors(columns_number, rows_number):
     colors = [[]]
     colors_range = np.arange(0,256,1)
@@ -182,7 +153,7 @@ def generate_cells_mask(columns_number, rows_number, column_widths,
     return workbook
 
 
-def save_data(path, table_wb, mask_cell_wb, words_list, table_nb, rows_number):
+def save_data(path, table_wb, mask_wb, mask_cell_wb, words_list, table_nb, rows_number):
     """ Save .xlsx, .png and .json files for table, mask, columns,
         column content etc.
         :Arguments:
@@ -206,12 +177,19 @@ def save_data(path, table_wb, mask_cell_wb, words_list, table_nb, rows_number):
 
     table_name = str(table_nb) + "_table" + ".xlsx"
     table_img_name = str(table_nb) + "_table" + ".png"
+    mask_name = str(table_nb) + "_mask" + ".xlsx"
+    mask_img_name = str(table_nb) + "_mask" + ".png"
     mask_cell_name = str(table_nb) + "_mask_cell" + ".xlsx"
     mask_cell_img_name = str(table_nb) + "_mask_cell" + ".png"
 
     table_wb.save(join(path, table_name))
     export_img(join(path, table_name), join(path, table_img_name))
     zero_padding(join(path, table_img_name), IMG_SHAPE)
+
+    mask_wb.save(join(path, mask_name))
+    export_img(join(path, mask_name), join(path, mask_img_name))
+    zero_padding(join(path, mask_img_name), IMG_SHAPE)
+    remove(join(path, mask_name))
 
     mask_cell_wb.save(join(path, mask_cell_name))
     export_img(join(path, mask_cell_name), join(path, mask_cell_img_name))
@@ -265,7 +243,7 @@ def generate_column_image(img, mask, colors, words_list, table_nb, img_col_shape
             json.dump(words_list[c], outfile)
 
 
-def zero_padding(img_name, img_size, convert_to_gray=False):
+def zero_padding(img_name, img_size):
     """ Image zero padding to align image shapes to defined shape, common
         to all images.
         :Arguments:
@@ -284,23 +262,7 @@ def zero_padding(img_name, img_size, convert_to_gray=False):
     except Exception as e:
         logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
         raise
-    if convert_to_gray:
-        imsave(img_name, rgb2labels(img))
-    else:
-        imsave(img_name, img)
-
-
-def rgb2labels(img):
-    """ Convert RGB mask to gray mask.
-        :Arguments:
-            img: numpy array:: image (mask) in RGB
-        :Returns:
-            saved, grayscale image (mask)
-    """
-    img = (rgb2gray(img)*255).astype('uint8')
-    for label, color in enumerate(np.unique(img)[1:]):
-        img[img == color] = label+1
-    return img
+    imsave(img_name, img)
 
 
 def generate_dataset(table_nb, words_corpus, path=""):
@@ -386,15 +348,15 @@ def generate_dataset_parallel(table_nbs, words_corpus, path=""):
                 # generate table
                 table_wb = generate_table(words_list, table_params, font, border,
                                           alignment, rows_height, columns_width)
-                # mask_wb = generate_masks(table_params['columns_number'],
-                #                         table_params['rows_number'], columns_width,
-                #                         rows_height)
+                mask_wb = generate_masks(table_params['columns_number'],
+                                         table_params['rows_number'], columns_width,
+                                         rows_height)
                 mask_cell_wb =\
                     generate_cells_mask(table_params['columns_number'],
                                         table_params['rows_number'],
                                         columns_width, rows_height)
-                save_data(path, table_wb, mask_cell_wb, words_list, table_nb,
-                          table_params['rows_number'])
+                save_data(path, table_wb, mask_wb, mask_cell_wb,
+                          words_list, table_nb, table_params['rows_number'])
                 should_repeat = False
                 logger.info("Table was generated succesfuly")
             except Exception as e:
@@ -446,7 +408,4 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
 
 
 if __name__ == "__main__":
-    dataset_generator(
-        3,  config_path="C://Users//Dominik//Desktop//Doktorat//Badania//tabOCR//config",
-        save_path="C://Users//Dominik//Desktop//Doktorat//Badania//tabOCR//dataset2//"
-    )
+    dataset_generator(3)
