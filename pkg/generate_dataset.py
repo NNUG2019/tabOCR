@@ -194,12 +194,12 @@ def save_data(path, table_wb, mask_wb, mask_cell_wb, words_list, table_nb, rows_
 
     mask_wb.save(join(path, mask_name))
     export_img(join(path, mask_name), join(path, mask_img_name))
-    zero_padding(join(path, mask_img_name), IMG_SHAPE)
+    zero_padding(join(path, mask_img_name), IMG_SHAPE, to_gray=True, rows_number=rows_number)
     remove(join(path, mask_name))
 
     mask_cell_wb.save(join(path, mask_cell_name))
     export_img(join(path, mask_cell_name), join(path, mask_cell_img_name))
-    zero_padding(join(path, mask_cell_img_name), IMG_SHAPE)
+    zero_padding(join(path, mask_cell_img_name), IMG_SHAPE, to_gray=True, rows_number=rows_number)
 
     img = imread(join(path, table_img_name))
     mask = imread(join(path, mask_cell_img_name))
@@ -257,7 +257,7 @@ def generate_column_image(img, mask, colors, words_list, table_nb, img_col_shape
             json.dump(words_list[c], outfile)
 
 
-def zero_padding(img_name, img_size):
+def zero_padding(img_name, img_size, to_gray=False, rows_number=None):
     """ Image zero padding to align image shapes to defined shape, common
         to all images.
         :Arguments:
@@ -276,7 +276,23 @@ def zero_padding(img_name, img_size):
     except Exception as e:
         logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
         raise
+    if to_gray and rows_number:
+        colors = get_colors_from_mask(img, rows_number)
+        img = convert_rgb2gray(img, colors)
     imsave(img_name, img)
+
+
+def convert_rgb2gray(img, colors):
+    """ """
+    # img_gray = np.zeros(img.shape[0:2])
+    img_gray = rgb2gray(img)
+    colors = np.unique(img_gray)
+    img_new = np.zeros(img_gray.shape)
+    for label, color in enumerate(colors):
+        mask = img_gray == color
+        mask = mask*(label+1)
+        img_new += mask
+    return img_new.astype('uint16')
 
 
 def generate_dataset(table_nb, words_corpus, path=""):
