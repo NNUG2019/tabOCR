@@ -170,9 +170,15 @@ def save_data(path, table_wb, mask_wb, mask_cell_wb, words_list, table_nb, rows_
         path = "dataset/"
     if not exists(path):
         mkdir(path)
-    path = join(path, str(table_nb))
+    path = join(path, str(table_nb+91))
     if exists(path):
-        remove(path)
+        try_again = True
+        while try_again:
+            try:
+                remove(path)
+                try_again = False
+            except PermissionError:
+                try_again = True
     mkdir(path)
 
     table_name = str(table_nb) + "_table" + ".xlsx"
@@ -216,7 +222,11 @@ def generate_cell_image(img, mask, colors, words_list, table_nb, img_row_shape, 
             img_cell = img[pos[0].min():pos[0].max(), pos[1].min():pos[1].max(),:]
 
             pad_width = ((0, img_row_shape[0]-img_cell.shape[0]), (0, img_row_shape[1]-img_cell.shape[1]), (0,0))
-            img_cell = np.pad(img_cell, pad_width=pad_width, mode='constant', constant_values=(0))
+            try:
+                img_cell = np.pad(img_cell, pad_width=pad_width, mode='constant', constant_values=(0))
+            except Exception as e:
+                logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
+                raise
 
             cell_img_name = str(table_nb) + "_cell_" + str(c) + "_" + str(r) + ".png"
             cell_text_name = str(table_nb) + "_cell_" + str(c) + "_" + str(r) + ".json"
@@ -234,7 +244,11 @@ def generate_column_image(img, mask, colors, words_list, table_nb, img_col_shape
                       :]
 
         pad_width = ((0, img_col_shape[0]-img_col.shape[0]), (0, img_col_shape[1]-img_col.shape[1]), (0,0))
-        img_col = np.pad(img_col, pad_width=pad_width, mode='constant', constant_values=(0))
+        try:
+            img_col = np.pad(img_col, pad_width=pad_width, mode='constant', constant_values=(0))
+        except Exception as e:
+            logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
+            raise
 
         col_img_name = str(table_nb) + "_column_" + str(c) + ".png"
         col_text_name = str(table_nb) + "_column_" + str(c) + ".json"
@@ -376,8 +390,8 @@ def make_chunks(lst, n):
         yield lst[i:i + n]
 
 
-def dataset_generator(number_of_tables, parallel=True, save_path="",
-                      config_path=""):
+def dataset_generator(number_of_tables, parallel=True, cpu_count=None,
+                      save_path="", config_path=""):
     """ Generate a set of tables for learning the ANN.
         :Arguments:
             number_of_tables: int:: number of tables to generate
@@ -388,7 +402,10 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
     words_corpus = define_words_list(config_path)
     if parallel:
         # synchronous
-        pool = mp.Pool(mp.cpu_count())
+        if not cpu_count:
+            pool = mp.Pool(mp.cpu_count())
+        else:
+            pool = mp.Pool(cpu_count)
         chunks = make_chunks([i for i in range(number_of_tables)], 10)
         [pool.apply(generate_dataset_parallel, args=(table_nbs, words_corpus,
                                                      save_path))
@@ -408,4 +425,4 @@ def dataset_generator(number_of_tables, parallel=True, save_path="",
 
 
 if __name__ == "__main__":
-    dataset_generator(3)
+    dataset_generator(1000, cpu_count=3)
