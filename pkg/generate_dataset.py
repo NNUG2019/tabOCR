@@ -4,6 +4,7 @@ from openpyxl.utils import get_column_letter
 from os.path import join, exists
 from os import mkdir
 from os import remove
+from shutil import rmtree
 import json
 from skimage.io import imread, imsave
 from skimage.color import rgb2gray
@@ -170,15 +171,12 @@ def save_data(path, table_wb, mask_wb, mask_cell_wb, words_list, table_nb, rows_
         path = "dataset/"
     if not exists(path):
         mkdir(path)
-    path = join(path, str(table_nb+91))
+    path = join(path, str(table_nb))
     if exists(path):
-        try_again = True
-        while try_again:
-            try:
-                remove(path)
-                try_again = False
-            except PermissionError:
-                try_again = True
+        try:
+            rmtree(path)
+        except PermissionError as e:
+                raise
     mkdir(path)
 
     table_name = str(table_nb) + "_table" + ".xlsx"
@@ -190,32 +188,33 @@ def save_data(path, table_wb, mask_wb, mask_cell_wb, words_list, table_nb, rows_
 
     table_wb.save(join(path, table_name))
     export_img(join(path, table_name), join(path, table_img_name))
-    zero_padding(join(path, table_img_name), IMG_SHAPE)
+    img_table = zero_padding(join(path, table_img_name), IMG_SHAPE)
+    imsave(join(path, table_img_name), img_table)
 
     mask_wb.save(join(path, mask_name))
     export_img(join(path, mask_name), join(path, mask_img_name))
-    zero_padding(join(path, mask_img_name), IMG_SHAPE, to_gray=True, rows_number=rows_number)
     remove(join(path, mask_name))
-
+    img_mask = zero_padding(join(path, mask_img_name), IMG_SHAPE)
     mask_cell_wb.save(join(path, mask_cell_name))
     export_img(join(path, mask_cell_name), join(path, mask_cell_img_name))
-    zero_padding(join(path, mask_cell_img_name), IMG_SHAPE, to_gray=True, rows_number=rows_number)
+    remove(join(path, mask_cell_name))
+    img_mask_cell = zero_padding(join(path, mask_cell_img_name), IMG_SHAPE)
 
     img = imread(join(path, table_img_name))
-    mask = imread(join(path, mask_cell_img_name))
-    mask = rgb2gray(mask)
-    colors = get_colors_from_mask(mask, rows_number)
-    generate_column_image(img, mask, colors, words_list, table_nb, IMG_COL_SHAPE, path)
-    generate_cell_image(img, mask, colors, words_list, table_nb, IMG_ROW_SHAPE, path)
+    convert_rgb2gray(img_mask, join(path, mask_img_name), rows_number)
+    convert_rgb2gray(img_mask_cell, join(path, mask_cell_img_name), rows_number)
+    generate_column_image(img, img_mask_cell, rows_number, words_list, table_nb, IMG_COL_SHAPE, path)
+    generate_cell_image(img, img_mask_cell, rows_number, words_list, table_nb, IMG_ROW_SHAPE, path)
 
 
 def get_colors_from_mask(mask, rows_number):
-    mask = rgb2gray(mask)
-    colors = np.unique(mask)[1:]
+    colors = np.unique(rgb2gray(mask))[1:]
     return list(make_chunks(colors, rows_number))
 
 
-def generate_cell_image(img, mask, colors, words_list, table_nb, img_row_shape, path):
+def generate_cell_image(img, img_mask_cell, rows_number, words_list, table_nb, img_row_shape, path):
+    mask = rgb2gray(img_mask_cell)
+    colors = get_colors_from_mask(mask, rows_number)
     for c, col_colors in enumerate(colors):
         for r, color in enumerate(col_colors):
             pos = np.where(mask == color)
@@ -235,7 +234,9 @@ def generate_cell_image(img, mask, colors, words_list, table_nb, img_row_shape, 
                 json.dump(words_list[c][r], outfile)
 
 
-def generate_column_image(img, mask, colors, words_list, table_nb, img_col_shape, path):
+def generate_column_image(img, img_mask_cell, rows_number, words_list, table_nb, img_col_shape, path):
+    mask = rgb2gray(img_mask_cell)
+    colors = get_colors_from_mask(mask, rows_number)
     for c, col_colors in enumerate(colors):
         first_cell_pos = np.where(mask == col_colors[0])
         last_cell_pos = np.where(mask == col_colors[-1])
@@ -257,7 +258,7 @@ def generate_column_image(img, mask, colors, words_list, table_nb, img_col_shape
             json.dump(words_list[c], outfile)
 
 
-def zero_padding(img_name, img_size, to_gray=False, rows_number=None):
+def zero_padding(img_name, img_size):
     """ Image zero padding to align image shapes to defined shape, common
         to all images.
         :Arguments:
@@ -276,23 +277,28 @@ def zero_padding(img_name, img_size, to_gray=False, rows_number=None):
     except Exception as e:
         logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
         raise
-    if to_gray and rows_number:
-        colors = get_colors_from_mask(img, rows_number)
-        img = convert_rgb2gray(img, colors)
-    imsave(img_name, img)
+    # if to_gray and rows_number:
+    #    colors = get_colors_from_mask(img, rows_number)
+    #    img = convert_rgb2gray(img, colors)
+    # imsave(img_name, img)
+    return img
 
 
-def convert_rgb2gray(img, colors):
+def convert_rgb2gray(img, img_name, rows_number):
     """ """
     # img_gray = np.zeros(img.shape[0:2])
     img_gray = rgb2gray(img)
-    colors = np.unique(img_gray)
+    colors = get_colors_from_mask(img_gray, rows_number)
+    # colors = np.unique(img_gray)
     img_new = np.zeros(img_gray.shape)
-    for label, color in enumerate(colors):
-        mask = img_gray == color
-        mask = mask*(label+1)
-        img_new += mask
-    return img_new.astype('uint16')
+    label = 1
+    for color in colors:
+        for c in color:
+            mask = img_gray == c
+            mask = mask*label
+            img_new += mask
+            label += 1
+    return imsave(img_name, img_new.astype('uint8'))
 
 
 def generate_dataset(table_nb, words_corpus, path=""):
@@ -388,7 +394,7 @@ def generate_dataset_parallel(table_nbs, words_corpus, path=""):
                 save_data(path, table_wb, mask_wb, mask_cell_wb,
                           words_list, table_nb, table_params['rows_number'])
                 should_repeat = False
-                logger.info("Table was generated succesfuly")
+                logger.info("Table was generated succesfully")
             except Exception as e:
                 tb = traceback.format_exc()
                 logger.error(tb)
@@ -441,4 +447,4 @@ def dataset_generator(number_of_tables, parallel=True, cpu_count=None,
 
 
 if __name__ == "__main__":
-    dataset_generator(1000, cpu_count=3)
+    dataset_generator(1000)
