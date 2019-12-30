@@ -112,13 +112,14 @@ def generate_masks(columns_number, rows_number, column_widths, rows_height):
     """
     workbook = Workbook()
     sheet = workbook.active
+    colors = generate_colors(columns_number, rows_number)
     for c in range(columns_number):
         for r in range(rows_number):
             cell = sheet.cell(r+1, c+1)
             sheet.row_dimensions[r+1].height = rows_height
             sheet.column_dimensions[get_column_letter(c+1)].width =\
                 column_widths[c]
-            cell.fill = generate_pattern_fill(COLORS[c])
+            cell.fill = generate_pattern_fill(colors[c][0])
 
     return workbook
 
