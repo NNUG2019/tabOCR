@@ -244,17 +244,22 @@ def generate_column_image(img, img_mask_cell, rows_number, words_list, table_nb,
         img_col = img[first_cell_pos[0].min():last_cell_pos[0].max(),
                       first_cell_pos[1].min():last_cell_pos[1].max(),
                       :]
+        img_col_mask = mask[first_cell_pos[0].min():last_cell_pos[0].max(),
+                            first_cell_pos[1].min():last_cell_pos[1].max()]
 
         pad_width = ((0, img_col_shape[0]-img_col.shape[0]), (0, img_col_shape[1]-img_col.shape[1]), (0,0))
         try:
             img_col = np.pad(img_col, pad_width=pad_width, mode='constant', constant_values=(0))
+            img_col_mask = np.pad(img_col_mask, pad_width=pad_width[0:2], mode='constant', constant_values=(0))
         except Exception as e:
             logger.error("Wrong image size: img.shape: {img.shape}, img_size: {}")
             raise
 
         col_img_name = str(table_nb) + "_column_" + str(c) + ".png"
+        col_mask_name = str(table_nb) + "_column_mask_" + str(c) + ".png"
         col_text_name = str(table_nb) + "_column_" + str(c) + ".json"
         imsave(join(path, col_img_name), img_col)
+        imsave(join(path, col_mask_name), (img_col_mask*255).astype('uint8'))
         with open(join(path, col_text_name), 'w') as outfile:
             json.dump(words_list[c], outfile)
 
