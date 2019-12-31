@@ -43,12 +43,12 @@ def simple_imager(lst, path):
         for l in f:
             j = 0
 
-            column_color = take(col_colors)
-            # colors[i] zrobi gradient
+            column_color = colors[i]
+            # take(col_colors) zrobi tencze
             column_fill = PatternFill(patternType='solid', fill_type='solid', fgColor=column_color)
             for w in l:
-                cell_color = take(cell_colors)
-                # colors[17*i+j] zrobi gradient
+                cell_color = colors[17*i+j]#
+                # take(cell_colors) zrobi tecze
                 cell_fill = PatternFill(patternType='solid', fill_type='solid', fgColor=cell_color)
 
                 main_sheet.cell(row=j+1, column=i+1).value = w
