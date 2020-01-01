@@ -1,0 +1,10 @@
+1. Próbuję wygenerować maskę kolumn poprzez wykrycie ich konców przy rownoczesnym sprowadzeniu obrazka do jednego wymiaru a
+nastepnie 'deterministyczne' odtworzenie pełnej jego wersji.
+
+2. Maska jest gradientowa i ten gradient ma pozwolić sieci odtworzyć kolory maski.
+
+3. Pierwsze próby były bezowocne chociaż pojawianie się lini poziomych może być jakimś tropem dla późniejszej sieci odtwarzającej cały układ
+tabelki. Powstawały takie wozry jak na koszuli w kratkę. Lepsze gdy były jednokolorowe co wychodziło czasami. (niebieskie)
+
+4. W tej chwili wygląda na to że może być to dobre podejście. Sieć osiągnęła stratę mae około 0.01 i odtworzyła jakieś kolumny. Może to być
+oczywiście wyuczenie się na pamięć gradientu ale jest to na pewno krok w dobrym kierunku. Dodam prawdopodbnie warstwę rekurencyjną.
