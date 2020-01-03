@@ -7,10 +7,16 @@ def split_dataset(dataset_path, new_dataset_path):
     if not os.path.exists(new_dataset_path):
         os.mkdir(new_dataset_path)
     img_path = os.path.join(new_dataset_path, "img_table")
+    img_column_path = os.path.join(new_dataset_path, "img_column")
+    img_cell_path = os.path.join(new_dataset_path, "img_cell")
+    text_cell_path = os.path.join(new_dataset_path, "text_cell")
+    text_column_path = os.path.join(new_dataset_path, "text_column")
     mask_column_path = os.path.join(new_dataset_path, "img_mask_column")
     mask_cell_path = os.path.join(new_dataset_path, "img_mask_cell")
-    mask_column_cells_path = os.path.join(new_dataset_path, "img_mask_column_cells")
-    folders = [img_path, mask_column_path, mask_cell_path, mask_column_cells_path]
+    mask_column_cells_path = os.path.join(new_dataset_path,
+                                          "img_mask_column_cells")
+    folders = [img_path, img_column_path, img_cell_path, text_cell_path,
+               mask_column_path, mask_cell_path, mask_column_cells_path]
     for path in folders:
         if not os.path.exists(path):
             os.mkdir(path)
@@ -19,6 +25,14 @@ def split_dataset(dataset_path, new_dataset_path):
         for f in files:
             if f.endswith('table.png'):
                 shutil.copyfile(os.path.join(path, f), os.path.join(img_path, f))
+            if re.match(".*column_[0-9]+.png$", f):
+                shutil.copyfile(os.path.join(path, f), os.path.join(img_column_path, f))
+            if re.match(".*column_[0-9]+.json$", f):
+                shutil.copyfile(os.path.join(path, f), os.path.join(text_column_path, f))
+            if re.match(".*cell_[0-9]+_[0-9]+.png$", f):
+                shutil.copyfile(os.path.join(path, f), os.path.join(img_cell_path, f))
+            if re.match(".*cell_[0-9]+_[0-9]+.json$", f):
+                shutil.copyfile(os.path.join(path, f), os.path.join(text_cell_path, f))
             if f.endswith('mask.png'):
                 shutil.copyfile(os.path.join(path, f), os.path.join(mask_column_path, f))
                 os.rename(os.path.join(mask_column_path, f), os.path.join(mask_column_path, f.replace("mask", "table")))
