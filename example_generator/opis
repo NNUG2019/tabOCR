@@ -1,0 +1,55 @@
+Ten folder zawiera trzy generatory tabelek:
+
+  1. bare_bones_generator - Powstał jako pierwszy przykładowy generator. Posłużył jako test i baza dla dalszej pracy.
+  - Używane pliki: bare_bones_generator.py, bare_bones_imager.py, bare_bones_lister.py, bare_bones_word_generator.py, colorizer.py i 
+save_csv.py.
+  - Output dnia 2019-12-07: Tabelki mają stałą liczbę kolumn i wierszy. Ich szerokości i wysokości również są stałe. Zawartość komórek
+stanowią generowane losowo ciągi znaków. Kolorystyka tabelki jest stała. Generowane pliki:
+    - [i].csv: plik csv zawierający zawartość komórek tabelki. Wiersze w pliku odpowidają kolumnom w tabelce.
+    - a[i].png: obraz tabelki z tesktem.
+    - b[i].png: obraz tabelki z maskami kolumn. Maska jest gradientem kolorów.
+    - c[i].png: obraz tabelki z maskami komórek. Maska jest gradientem kolorów.
+    - a[i].xlsx: plik xlsx zawierający tabelkę.
+    - b[i].xlsx: plik xlsx zawierający maski kolumn.
+    - c[i].xlsx: plik xlsx zawierający maski komórek.
+    
+
+  2. full_generator - Generuje zróżnicowane tabelki. Pod koniec jego rozwoju pojawił się problem z wachaniem wyskości obrazków wynikający
+z prawdopodbnie z zaokragleń. Został porzucony na rzecz generatora zawartego w folderze pkg.
+  - Używane pliki: full_generator.py, parameters_generator.py, full_imager.py, full_lister.py, word_generator.py, save_csv.py i
+colorizer.py
+  - Output dnia 2019-12-26: Tabelki są zróżnicowane pod względem kompozycji, rodzaju obramowań, czcionki, koloru tekstu oraz danych
+zawartych w komórkach które mogą być ciągami znaków lub liczbami. Dodatkwowo to zróżnicowanie nie jest losowane na poziomie pojedynczej
+komórki (np. cała kolumna może nie mieć poziomych lini oddzielających wiersze). Wygląd generowanych tabelek jest wiec bliższy wyglądowi
+jaki takie tabelki mają w rzeczywistości. Tabelki mają różne rozmiary. Puste miejsce wypełniane jest kolorem białym. Docelowo
+chcieliśmy uzyskać obrazy o rozmiarze 2201x2201. Generowane pliki:
+    - [i].csv: plik csv zawierający zawartość komórek tabelki. Wiersze w pliku odpowidają kolumnom w tabelce.
+    - a[i].png: obraz tabelki z tesktem.
+    - b[i].png: obraz tabelki z maskami kolumn. Maska jest gradientem kolorów.
+    - c[i].png: obraz tabelki z maskami komórek. Maska jest gradientem kolorów.
+    - a[i].xlsx: plik xlsx zawierający tabelkę.
+    - b[i].xlsx: plik xlsx zawierający maski kolumn.
+    - c[i].xlsx: plik xlsx zawierający maski komórek.
+  - Uwagi: Istnieje wersja generująca zupełnie innaczej wyglądający output (wersja przed napisaniem parameters_generator.py).
+
+  3. simple_generator - Ten generator powstał na bazie bare_bones_generator żeby szybko zaspokoić zapotrzebowanie na proste tabelki.
+Wprowadzone zmiany są brzydkie ale generator spełnia swoje zadanie.
+  - Używane pliki: simple_generator.py, simple_imager.py, bare_bones_lister.py, bare_bones_word_generator.py, colorizer.py i 
+save_csv.py.
+  - Output dnia 2020-01-01: Tabelki mają taki sam rozmiar oraz liczbę kolumn i wierszy oraz kolorystykę. Różne są natomiast szerokości
+kolumn oraz wysokości wierszy. Zawartość komórek jest taka sama jak w bare_bones_generator. Generowane pliki:
+    - [i].csv: plik csv zawierający zawartość komórek tabelki. Wiersze w pliku odpowidają kolumnom w tabelce.
+    - a[i].png: obraz tabelki z tesktem.
+    - b[i].png: obraz tabelki z maskami kolumn. Zamaskowane są granice posczególnych kolumn (na czarno na białym tle).
+    - c[i].png: obraz tabelki z maskami komórek. Zamaskowane są granice posczególnych komórek (na czarno na białym tle).
+    - a[i].xlsx: plik xlsx zawierający tabelkę.
+    - b[i].xlsx: plik xlsx zawierający maski kolumn.
+    - c[i].xlsx: plik xlsx zawierający maski komórek.
+  - Output dnia 2020-01-18: Jedyne zmiany w stosunku do 2020-01-01 dotyczą maskowania. Generowane pliki:
+    - [i].csv: plik csv zawierający zawartość komórek tabelki. Wiersze w pliku odpowidają kolumnom w tabelce.
+    - a[i].png: obraz tabelki z tesktem.
+    - b[i].png: obraz tabelki z maskami kolumn. Kolumny są na przemian czarno-białe.
+    - c[i].png: obraz tabelki z maskami komórek. Komórki tworzą czarno-białą szachownicę.
+    - a[i].xlsx: plik xlsx zawierający tabelkę.
+    - b[i].xlsx: plik xlsx zawierający maski kolumn.
+    - c[i].xlsx: plik xlsx zawierający maski komórek.
