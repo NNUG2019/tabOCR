@@ -1,4 +1,4 @@
-1. Próbuję wygenerować maskę kolumn poprzez wykrycie ich konców przy rownoczesnym sprowadzeniu obrazka do jednego wymiaru a nastepnie 'deterministyczne' odtworzenie pełnej jego wersji.
+1. Próbuję wygenerować maskę kolumn poprzez wykrycie ich konców przy rownoczesnym sprowadzeniu obrazka do jednego wymiaru a następnie deterministyczne dodanie przywrócenie orginalnego wymiaru.
 
 2. Maska jest gradientowa i ten gradient ma pozwolić sieci odtworzyć kolory maski.
 
@@ -7,3 +7,12 @@
 4. W tej chwili wygląda na to że może być to dobre podejście. Sieć osiągnęła stratę mae około 0.01 i odtworzyła jakieś kolumny. Może to być oczywiście wyuczenie się na pamięć gradientu ale jest to na pewno krok w dobrym kierunku. Dodam prawdopodbnie warstwę rekurencyjną.
 
 5. Sieć wpadła w lokalne minimum przy ponownym odpaleniu. Teraz zrobię jeszcze bardziej sztywne wyjście i zobaczę co z tego będzie.
+
+# Po 5 wpisie przestałem wrzucać pliki na githuba. W międzyczasie poprawiłem kilka upokażających błędów i przeprowadziłem kolejne próby. Niestety nie starczyło mi czasu ma dopracowanie tej architektóry.
+
+Krótki opis stanu obecnego:
+1. Sieć uczona na tabelkach z zamaskowanymi zakończeniami kolumn utyka w lokalnym minimum (na początku tabelki czarny pasek a reszta biała). Zmiana prędkości uczenia nie pomaga.
+2. Mam gotowy genrator tabelek z czarno-białymi kolumnami na przemian. Nie miałem czasu sprawdzić czy to pomoże.
+3. Założenia architektury są podobne co na początku.
+
+Stan obecny znajduje się w notebooku stan_obecny.ipynb.
