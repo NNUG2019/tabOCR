@@ -1,18 +1,32 @@
-1. Próbuję wygenerować maskę kolumn poprzez wykrycie ich konców przy rownoczesnym sprowadzeniu obrazka do jednego wymiaru a następnie deterministyczne dodanie przywrócenie orginalnego wymiaru.
+1. Próbuję wygenerować maskę kolumn poprzez wykrycie ich konców przy rownoczesnym sprowadzeniu obrazka do jednego wymiaru a następnie
+deterministyczne dodanie przywrócenie orginalnego wymiaru.
 
 2. Maska jest gradientowa i ten gradient ma pozwolić sieci odtworzyć kolory maski.
 
-3. Pierwsze próby były bezowocne chociaż pojawianie się lini poziomych może być jakimś tropem dla późniejszej sieci odtwarzającej cały układ tabelki. Powstawały takie wozry jak na koszuli w kratkę. Lepsze gdy były jednokolorowe co wychodziło czasami. (niebieskie)
+3. Pierwsze próby były bezowocne chociaż pojawianie się lini poziomych może być jakimś tropem dla późniejszej sieci odtwarzającej cały
+układ tabelki. Powstawały takie wozry jak na koszuli w kratkę. Lepsze gdy były jednokolorowe co wychodziło czasami. (niebieskie)
 
-4. W tej chwili wygląda na to że może być to dobre podejście. Sieć osiągnęła stratę mae około 0.01 i odtworzyła jakieś kolumny. Może to być oczywiście wyuczenie się na pamięć gradientu ale jest to na pewno krok w dobrym kierunku. Dodam prawdopodbnie warstwę rekurencyjną.
+4. W tej chwili wygląda na to że może być to dobre podejście. Sieć osiągnęła stratę mae około 0.01 i odtworzyła jakieś kolumny. Może to
+być oczywiście wyuczenie się na pamięć gradientu ale jest to na pewno krok w dobrym kierunku. Dodam prawdopodbnie warstwę rekurencyjną.
 
 5. Sieć wpadła w lokalne minimum przy ponownym odpaleniu. Teraz zrobię jeszcze bardziej sztywne wyjście i zobaczę co z tego będzie.
 
-# Po 5 wpisie przestałem wrzucać pliki na githuba. W międzyczasie poprawiłem kilka upokażających błędów i przeprowadziłem kolejne próby. Niestety nie starczyło mi czasu ma dopracowanie tej architektury.
+Po 5 wpisie przestałem wrzucać pliki na githuba. W międzyczasie poprawiłem kilka upokarzających błędów i przeprowadziłem kolejne próby.
+Niestety nie starczyło mi czasu na dopracowanie tej architektury.
 
 Krótki opis stanu obecnego:
-1. Sieć uczona na tabelkach z zamaskowanymi zakończeniami kolumn utyka w lokalnym minimum (na początku tabelki czarny pasek a reszta biała). Zmiana prędkości uczenia nie pomaga.
-2. Mam gotowy genrator tabelek z czarno-białymi kolumnami na przemian. Nie miałem czasu sprawdzić czy to pomoże.
+1. Sieć uczona na tabelkach z zamaskowanymi zakończeniami kolumn utyka w lokalnym minimum (na początku tabelki czarny pasek a reszta
+biała). Zmiana prędkości uczenia nie pomaga.
+2. Mam gotowy generator tabelek z czarno-białymi kolumnami na przemian. Nie miałem czasu sprawdzić czy to pomoże.
 3. Założenia architektury są podobne co na początku.
 
 Stan obecny znajduje się w notebooku stan_obecny.ipynb.
+
+Uwagi:
+1. Ponieważ pierwszym celem jaki sobie postawiłem było przeuczenie sieci nie ma osobnego zbioru walidacyjnego. Tesotwanie natomiast
+jest ograniczone do sprawdzania jak wygląda predykcja sieci (czy wygląda mniej więcej dobrze).
+2. Stosunkowo dobry wynik opisany we wpisie nr. 4 był prawie na pewno wyuczeniem się przez neurony używanej wtedy do przywracania kanałow
+warstwy gęstej na pamięć miejsc gdzie mniej więcej kończyły się kolumny. Po usunięciu tej warstwy taki wynik się nie powtórzył.
+3. Wrzucane pliki mają niedbałe nazwy ponieważ miało to być tylko miejsce w któym zapiszę mniej więcej co robiłem.
+4. Myślę że dotychczasowe niepowodzenia wynikają z mojej niekompetencji w implementacji tego pomysłu a nie z samego pomysłu. Niestety
+próbowałem odkryć na bierząco jak wszystko działa zamiast pożądnie poczytać o rozwiązywaniu podobnych problemów.
