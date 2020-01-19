@@ -12,6 +12,7 @@ stanowią generowane losowo ciągi znaków. Kolorystyka tabelki jest stała. Gen
     - a[i].xlsx: plik xlsx zawierający tabelkę.
     - b[i].xlsx: plik xlsx zawierający maski kolumn.
     - c[i].xlsx: plik xlsx zawierający maski komórek.
+  - Uwagi: Generator wyświetla ile procent tabelek już wygenerował.
   - Przykład użycia:
     bare_bones_generator(10000, './test_subjects1') # Zapisze 10000 tabelek w folderze './test_subjects1'.
     
@@ -56,5 +57,9 @@ kolumn oraz wysokości wierszy. Zawartość komórek jest taka sama jak w bare_b
     - a[i].xlsx: plik xlsx zawierający tabelkę.
     - b[i].xlsx: plik xlsx zawierający maski kolumn.
     - c[i].xlsx: plik xlsx zawierający maski komórek.
+  - Uwagi: Generator wyświetla ile procent tabelek już wygenerował.
   - Przykład użycia:
     simple_generator(3000, 'D:/dane_do_nn/test_subjects4') # Zapisze 3000 tabelek w folderze 'D:/dane_do_nn/test_subjects4'.
+
+Pozostałe pliki: Plik 'test.py' jest używany do wywoływania generatorów. Przy testach wczesnych wersji generatora folder 'saved' był
+używany do przechowywania wygenerowanych tabelek. Został dodany do repozytorium jako wskazówka do pliku 'test.py'.
