@@ -8,7 +8,7 @@
 
 5. Sieć wpadła w lokalne minimum przy ponownym odpaleniu. Teraz zrobię jeszcze bardziej sztywne wyjście i zobaczę co z tego będzie.
 
-# Po 5 wpisie przestałem wrzucać pliki na githuba. W międzyczasie poprawiłem kilka upokażających błędów i przeprowadziłem kolejne próby. Niestety nie starczyło mi czasu ma dopracowanie tej architektóry.
+# Po 5 wpisie przestałem wrzucać pliki na githuba. W międzyczasie poprawiłem kilka upokażających błędów i przeprowadziłem kolejne próby. Niestety nie starczyło mi czasu ma dopracowanie tej architektury.
 
 Krótki opis stanu obecnego:
 1. Sieć uczona na tabelkach z zamaskowanymi zakończeniami kolumn utyka w lokalnym minimum (na początku tabelki czarny pasek a reszta biała). Zmiana prędkości uczenia nie pomaga.
